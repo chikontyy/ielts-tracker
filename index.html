@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IELTS Prep Tracker & Study Assistant</title>
+  <meta name="description" content="A dashboard for IELTS preparation: band score tracker, academic vocabulary flashcards and an exam practice timer. Built with vanilla HTML, CSS and JavaScript.">
+  <meta name="theme-color" content="#0a0e16">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237cf0c8'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='700' text-anchor='middle' fill='%2306130f'>IP</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="IELTS Prep Tracker — top of page">
+      <span class="brand-mark">IP</span>
+      <span class="brand-name">IELTS Prep <b>Tracker</b></span>
+    </a>
+
+    <nav class="topnav" aria-label="Sections">
+      <a href="#tracker" data-nav="tracker">Tracker</a>
+      <a href="#vocab" data-nav="vocab">Vocabulary</a>
+      <a href="#timer" data-nav="timer">Timer</a>
+    </nav>
+
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme">☀</button>
+  </header>
+
+  <main id="main">
+    <!-- OVERVIEW -->
+    <section class="overview" id="top" aria-label="Overview">
+      <div class="overview-intro">
+        <p class="eyebrow">Academic IELTS · Self-study dashboard</p>
+        <h1>Track your progress.<br><span class="grad">Reach your target band.</span></h1>
+        <p class="lead">Log practice-test scores, drill academic vocabulary and train under real exam timing — all in one place. Your data is saved privately in your own browser.</p>
+      </div>
+
+      <div class="stat-grid">
+        <article class="stat stat-main">
+          <span class="stat-label">Overall band</span>
+          <span class="stat-value" id="overall-band">–</span>
+          <span class="stat-note" id="overall-note">Log a score to begin</span>
+        </article>
+
+        <article class="stat">
+          <label class="stat-label" for="target-select">Target band</label>
+          <select id="target-select" class="select-big" aria-describedby="gap-note"></select>
+          <span class="stat-note" id="gap-note">&nbsp;</span>
+        </article>
+
+        <article class="stat">
+          <span class="stat-label">Tests logged</span>
+          <span class="stat-value" id="tests-count">0</span>
+          <span class="stat-note">across all four sections</span>
+        </article>
+
+        <article class="stat">
+          <span class="stat-label">Practice time</span>
+          <span class="stat-value"><span id="practice-minutes">0</span><small>min</small></span>
+          <span class="stat-note" id="practice-sessions">0 timed sessions completed</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- TRACKER -->
+    <section class="panel" id="tracker" aria-labelledby="tracker-title">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">01 · Tracker</p>
+          <h2 id="tracker-title">Score tracker</h2>
+        </div>
+        <p class="panel-sub">Overall band is the mean of your four section averages, rounded the IELTS way (to the nearest half band).</p>
+      </div>
+
+      <div class="tracker-grid">
+        <div class="stack">
+          <form id="score-form" class="card form" novalidate>
+            <h3>Log a result</h3>
+
+            <fieldset class="pills">
+              <legend class="field-label">Section</legend>
+              <label class="pill" style="--c: var(--c-listening)">
+                <input type="radio" name="section" value="listening" checked>
+                <span>Listening</span>
+              </label>
+              <label class="pill" style="--c: var(--c-reading)">
+                <input type="radio" name="section" value="reading">
+                <span>Reading</span>
+              </label>
+              <label class="pill" style="--c: var(--c-writing)">
+                <input type="radio" name="section" value="writing">
+                <span>Writing</span>
+              </label>
+              <label class="pill" style="--c: var(--c-speaking)">
+                <input type="radio" name="section" value="speaking">
+                <span>Speaking</span>
+              </label>
+            </fieldset>
+
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label" for="score-input">Band score (0–9)</label>
+                <input id="score-input" type="number" inputmode="decimal" min="0" max="9" step="0.5" placeholder="e.g. 7.0" required>
+              </div>
+              <div class="field">
+                <label class="field-label" for="date-input">Date</label>
+                <input id="date-input" type="date">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="note-input">Note (optional)</label>
+              <input id="note-input" type="text" maxlength="60" placeholder="e.g. Cambridge 17, Test 2">
+            </div>
+
+            <p id="form-error" class="form-error" role="alert" aria-live="assertive"></p>
+            <button class="btn btn-primary" type="submit">Add result</button>
+          </form>
+
+          <div class="card">
+            <h3>Section averages</h3>
+            <div id="section-bars" class="bars"></div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <h3>Score history</h3>
+            <div class="chart-wrap">
+              <svg id="history-chart" viewBox="0 0 600 240" role="img" aria-label="Line chart of your logged band scores over time"></svg>
+              <p id="chart-empty" class="empty">Your chart will appear after the first result.</p>
+            </div>
+            <ul class="legend" aria-hidden="true">
+              <li><i style="background: var(--c-listening)"></i>Listening</li>
+              <li><i style="background: var(--c-reading)"></i>Reading</li>
+              <li><i style="background: var(--c-writing)"></i>Writing</li>
+              <li><i style="background: var(--c-speaking)"></i>Speaking</li>
+              <li><i class="legend-dash"></i>Target</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Logged tests</h3>
+            <ul id="history-list" class="history"></ul>
+            <p id="history-empty" class="empty">No results yet. Add your first one on the left.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOCABULARY -->
+    <section class="panel" id="vocab" aria-labelledby="vocab-title">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">02 · Vocabulary</p>
+          <h2 id="vocab-title">Academic vocabulary trainer</h2>
+        </div>
+        <p class="panel-sub">40 high-value words for Band 6.5–7.5 Writing and Speaking. Flip the card, then mark whether you knew it.</p>
+      </div>
+
+      <div class="vocab-layout">
+        <div class="vocab-main">
+          <div class="filters" role="group" aria-label="Filter vocabulary">
+            <button class="chip-btn active" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="chip-btn" type="button" data-filter="6.5" aria-pressed="false">Band 6.5</button>
+            <button class="chip-btn" type="button" data-filter="7" aria-pressed="false">Band 7.0</button>
+            <button class="chip-btn" type="button" data-filter="7.5" aria-pressed="false">Band 7.5</button>
+            <button class="chip-btn" type="button" data-filter="review" aria-pressed="false">To review</button>
+          </div>
+
+          <div class="flashcard-wrap" id="flashcard-wrap">
+            <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-pressed="false" aria-label="Flashcard. Press Enter or Space to flip.">
+              <div class="flashcard-inner">
+                <div class="face face-front">
+                  <div class="face-top">
+                    <span class="badge" id="card-band">Band 7.0</span>
+                    <span class="chip-known" id="card-known" hidden>✓ Known</span>
+                  </div>
+                  <h3 class="word" id="card-word">mitigate</h3>
+                  <p class="pos" id="card-pos">verb</p>
+                  <p class="flip-hint">Tap to reveal the meaning</p>
+                </div>
+                <div class="face face-back">
+                  <p class="def" id="card-def"></p>
+                  <p class="example" id="card-example"></p>
+                  <p class="ru" id="card-ru"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-controls">
+            <button id="btn-prev" class="btn btn-ghost" type="button" aria-label="Previous word">← Prev</button>
+            <button id="btn-shuffle" class="btn btn-ghost" type="button">Shuffle</button>
+            <button id="btn-next" class="btn btn-ghost" type="button" aria-label="Next word">Next →</button>
+          </div>
+
+          <div class="card-actions">
+            <button id="btn-review" class="btn btn-soft-warn" type="button">↻ Review again</button>
+            <button id="btn-know" class="btn btn-primary" type="button">✓ I know it</button>
+          </div>
+
+          <p class="counter" id="card-counter" aria-live="polite">1 / 40</p>
+        </div>
+
+        <aside class="card vocab-side">
+          <h3>Mastery</h3>
+          <p class="mastery-total"><span id="mastery-count">0</span> / <span id="mastery-total">40</span> words known</p>
+          <div class="bar-track"><div class="bar-fill" id="mastery-fill"></div></div>
+          <ul class="mastery-list" id="mastery-list"></ul>
+          <div class="shortcuts">
+            <p class="field-label">Keyboard</p>
+            <p><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>Space</kbd> flip</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- TIMER -->
+    <section class="panel" id="timer" aria-labelledby="timer-title">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">03 · Timer</p>
+          <h2 id="timer-title">Practice timer</h2>
+        </div>
+        <p class="panel-sub">Train under real exam timing. A sound plays when time is up, even if you are in another tab.</p>
+      </div>
+
+      <div class="card timer-card">
+        <div class="timer-visual">
+          <div class="ring-wrap" id="ring-wrap">
+            <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+              <circle class="ring-bg" cx="100" cy="100" r="90"></circle>
+              <circle class="ring-fg" id="ring-fg" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="ring-center">
+              <span class="timer-display" id="timer-display" role="timer" aria-live="off">20:00</span>
+              <span class="timer-status" id="timer-status">Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timer-controls">
+          <p class="field-label">Choose a session</p>
+          <div class="presets" id="presets">
+            <button class="preset active" type="button" data-minutes="20" data-label="Writing Task 1" data-hint="Task 1: aim for at least 150 words.">
+              <b>20 min</b><span>Writing Task 1</span>
+            </button>
+            <button class="preset" type="button" data-minutes="40" data-label="Writing Task 2" data-hint="Task 2: aim for at least 250 words with a clear position.">
+              <b>40 min</b><span>Writing Task 2</span>
+            </button>
+            <button class="preset" type="button" data-minutes="60" data-label="Full Writing / Reading" data-hint="Full 60 minutes — the length of the Writing and Reading papers.">
+              <b>60 min</b><span>Full Writing / Reading</span>
+            </button>
+            <button class="preset" type="button" data-minutes="2" data-label="Speaking Part 2" data-hint="Speaking Part 2: talk for up to two minutes without stopping.">
+              <b>2 min</b><span>Speaking Part 2</span>
+            </button>
+          </div>
+
+          <form id="custom-form" class="custom-form">
+            <label class="field-label" for="custom-minutes">Custom minutes</label>
+            <div class="custom-row">
+              <input id="custom-minutes" type="number" min="1" max="180" step="1" inputmode="numeric" placeholder="1–180">
+              <button class="btn btn-ghost" type="submit">Set</button>
+            </div>
+          </form>
+
+          <p class="timer-hint" id="timer-hint">Task 1: aim for at least 150 words.</p>
+
+          <div class="timer-buttons">
+            <button id="timer-toggle" class="btn btn-primary btn-lg" type="button">Start</button>
+            <button id="timer-reset" class="btn btn-ghost btn-lg" type="button">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> IELTS Prep Tracker & Study Assistant · Built with vanilla HTML, CSS and JavaScript</p>
+    <div class="footer-actions">
+      <button id="export-btn" class="link-btn" type="button">Export data (.json)</button>
+      <button id="reset-btn" class="link-btn danger" type="button">Reset all data</button>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
